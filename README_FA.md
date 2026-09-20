@@ -8,6 +8,23 @@
 orgchat check
 ```
 
+## شروع سریع (Quick Start)
+
+نیازمندی‌ها:
+- Node.js 16+
+- Python 3.11+
+
+سپس:
+
+```bash
+cd your-chatbot
+npx orgchat check
+```
+
+بدون کلون. بدون نصب سراسری OrgChat. بدون ساخت `orgchat.toml` الزامی.
+
+`orgchat init` فقط برای تنظیمات پیشرفته و صریح است.
+
 این دستور هفت سؤال مهم را بررسی می‌کند:
 
 1. داده‌ها کجا هستند و چطور به‌روز می‌شوند؟

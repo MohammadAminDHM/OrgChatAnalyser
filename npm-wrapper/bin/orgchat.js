@@ -121,38 +121,23 @@ function ensureRuntime() {
     const check = execFileSync(PYTHON, ['-c', 'import orgchat; print(orgchat.__version__)'], { encoding: 'utf8', timeout: 10000 }).trim();
     if (check === ORGCHAT_VERSION) return;
   } catch {}
-  try {
-    console.log('Installing OrgChat ' + ORGCHAT_VERSION + '...');
     try {
+      console.log('Installing OrgChat ' + ORGCHAT_VERSION + '...');
       execFileSync(PYTHON, ['-m', 'pip', 'install', '--quiet', 'orgchat==' + ORGCHAT_VERSION], { stdio: 'inherit', timeout: 120000 });
-    } catch {
-      console.log('Trying unversioned install...');
-      execFileSync(PYTHON, ['-m', 'pip', 'install', '--quiet', 'orgchat'], { stdio: 'inherit', timeout: 120000 });
-    }
-    const verify = execFileSync(PYTHON, ['-c', 'import orgchat; print(orgchat.__version__)'], { encoding: 'utf8', timeout: 10000 }).trim();
-    if (verify === ORGCHAT_VERSION) {
-      console.log('✓ OrgChat ' + ORGCHAT_VERSION + ' ready');
-    } else {
-      console.error('Version mismatch after install. Expected ' + ORGCHAT_VERSION + ' got ' + verify);
-      // If installed is newer/older, rebuild once
-      try { fs.rmSync(VENV_DIR, { recursive: true, force: true }); } catch {}
-      console.log('Rebuilding with correct version...');
-      const { cmd, args } = result;
-      execFileSync(cmd, [...args, '-m', 'venv', VENV_DIR], { stdio: 'inherit', timeout: 30000 });
-      execFileSync(path.join(VENV_DIR, process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python'), ['-m', 'pip', 'install', '--quiet', '--force-reinstall', 'orgchat==' + ORGCHAT_VERSION], { stdio: 'inherit', timeout: 120000 });
-      const verify2 = execFileSync(PYTHON, ['-c', 'import orgchat; print(orgchat.__version__)'], { encoding: 'utf8', timeout: 10000 }).trim();
-      if (verify2 === ORGCHAT_VERSION) {
+      const verify = execFileSync(PYTHON, ['-c', 'import orgchat; print(orgchat.__version__)'], { encoding: 'utf8', timeout: 10000 }).trim();
+      if (verify === ORGCHAT_VERSION) {
         console.log('✓ OrgChat ' + ORGCHAT_VERSION + ' ready');
       } else {
-        console.error('Still version mismatch: ' + verify2);
+        console.error('Version mismatch after install. Expected ' + ORGCHAT_VERSION + ' got ' + verify);
         process.exit(1);
       }
+    } catch (exc) {
+      console.error('Could not install OrgChat Python engine ' + ORGCHAT_VERSION + '.');
+      console.error('The npm launcher and Python engine must use the same version.');
+      console.error('Expected: orgchat==' + ORGCHAT_VERSION);
+      console.error('Details:', exc.message || exc);
+      process.exit(1);
     }
-  } catch (exc) {
-    console.error('Failed to install OrgChat runtime. Check network/permissions.');
-    console.error('Details:', exc.message || exc);
-    process.exit(1);
-  }
 }
 
 ensureRuntime();

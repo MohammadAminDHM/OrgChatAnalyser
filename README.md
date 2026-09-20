@@ -8,14 +8,23 @@ Main command:
 orgchat check
 ```
 
-## Quick Start (no setup required)
+## Quick Start
+
+Requirements:
+- Node.js 16+
+- Python 3.11+
+
+Then:
 
 ```bash
 cd your-chatbot
 npx orgchat check
 ```
 
-No clone. No manual Python install. No mandatory `orgchat.toml`.
+No clone.
+No global OrgChat installation.
+No manual virtualenv setup.
+No mandatory orgchat.toml.
 
 If you already have the repo:
 

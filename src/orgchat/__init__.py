@@ -1,3 +1,6 @@
 """OrgChat project readiness checker."""
-
-__version__ = "0.1.0"
+try:
+    from importlib.metadata import version, PackageNotFoundError
+    __version__ = version("orgchat")
+except PackageNotFoundError:
+    __version__ = "0.1.3"
