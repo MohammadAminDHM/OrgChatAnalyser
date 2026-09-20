@@ -1,0 +1,52 @@
+[project]
+name = "Enterprise Support Chatbot"
+environment = "staging"
+
+[data_sources]
+sources = ["minio://documents", "postgres://knowledge"]
+freshness_slo_minutes = 1440
+sync_monitoring = true
+owner = "Knowledge Platform"
+refresh_test = true
+
+[access_control]
+auth = "OIDC"
+rbac = true
+document_level_filters = true
+audit_log = true
+secret_scan = true
+
+[quality]
+eval_dataset = "evals/golden.jsonl"
+automated_eval = true
+regression_gate = true
+min_score = 0.8
+last_evaluation = "2026-09-20"
+
+[grounding]
+citations = true
+abstention = true
+fallback = true
+prompt_injection_defense = true
+retrieval_logging = true
+
+[observability]
+tracing = true
+token_cost_tracking = true
+request_metrics = true
+latency_slo_ms = 2000
+dashboard = "ops/dashboard.json"
+
+[monitoring]
+healthcheck = "/health"
+error_logging = true
+alerts = true
+backup_restore_test = true
+incident_runbook = "docs/incident-runbook.md"
+
+[ownership]
+service_owner = "AI Platform"
+technical_owner = "Amin"
+oncall = "AI Platform on-call"
+runbook = "docs/runbook.md"
+review_cadence = "monthly"
