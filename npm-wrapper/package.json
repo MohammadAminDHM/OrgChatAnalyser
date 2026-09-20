@@ -1,1 +1,13 @@
-{"name":"orgchat","version":"0.1.0","description":"Production-readiness checks for organization chatbot projects (Node wrapper for Python CLI)","main":"index.js","bin":{"orgchat":"./bin/orgchat.js"},"scripts":{"postinstall":"echo 'Requires Python orgchat installed: pip install orgchat or uv tool install .'"},"engines":{"node":">=18"},"keywords":["orgchat","chatbot","readiness","cli"],"license":"MIT","publishConfig":{"access":"public"}}
+{
+  "name": "orgchat",
+  "version": "0.1.0",
+  "description": "Production-readiness checks for organization chatbot projects (isolated Python runtime via npx)",
+  "main": "index.js",
+  "bin": "bin/orgchat.js",
+  "scripts": {},
+  "engines": {"node": ">=16"},
+  "keywords": ["orgchat","chatbot","readiness","cli","rag"],
+  "license": "MIT",
+  "publishConfig": {"access":"public"},
+  "files": ["bin/","README.md"]
+}

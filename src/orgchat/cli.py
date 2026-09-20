@@ -5,6 +5,7 @@ from pathlib import Path
 import sys
 
 from . import __version__
+from .config import load_config, discover_project
 from .checker import build_report
 from .report import render
 from .templates import CONFIG_TEMPLATE
@@ -61,6 +62,24 @@ def main(argv: list[str] | None = None) -> int:
     if args.command != "check":
         parser.print_help()
         return 2
+
+    root = Path(args.path).expanduser().resolve()
+    config_path = Path(args.config).expanduser().resolve() if args.config else root / "orgchat.toml"
+    config_data, _, loaded = load_config(root, config_path if config_path.exists() else None)
+
+    if not loaded and not args.no_heuristics:
+        print("Scanning project...")
+        discovered = discover_project(root)
+        for k, v in discovered.items():
+            print(f"  ✓ {k} detected")
+        # Interactive quick questions for unknown info
+        try:
+            if input("\nI couldn't determine data refresh method. Automatic refresh? [y/N/skip] ").strip().lower() in ("y", "yes"):
+                config_data.setdefault("data_sources", {})["freshness_slo_minutes"] = 1440
+            else:
+                config_data.setdefault("data_sources", {})["freshness_slo_minutes"] = None
+        except EOFError:
+            pass
 
     try:
         report = build_report(

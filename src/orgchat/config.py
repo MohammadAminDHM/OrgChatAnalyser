@@ -35,6 +35,17 @@ def section(config: dict[str, Any], name: str) -> dict[str, Any]:
     return value if isinstance(value, dict) else {}
 
 
+def discover_project(root: Path) -> dict[str, Any]:
+    evidence = {}
+    for p in root.iterdir():
+        if p.is_file():
+            if p.name.lower() in ("readme.md","readme.rst","dockerfile","docker-compose.yml",".env.example","requirements.txt","pyproject.toml","package.json"):
+                evidence[p.name] = "found"
+    for sub in ("evals","tests","retrieval","rag","monitoring","observability","runbook","docs","op"):
+        if (root / sub).exists():
+            evidence[sub] = "directory"
+    return evidence
+
 def resolve_project_path(root: Path, value: Any) -> Path | None:
     if not isinstance(value, str) or not value.strip():
         return None
