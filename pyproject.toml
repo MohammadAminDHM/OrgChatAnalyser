@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "orgchat-check"
+name = "orgchat"
 version = "0.1.0"
 description = "Production-readiness checks for organization chatbot projects"
 readme = "README.md"
