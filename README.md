@@ -8,6 +8,22 @@ Main command:
 orgchat check
 ```
 
+## Quick Start (no setup required)
+
+```bash
+cd your-chatbot
+npx orgchat check
+```
+
+No clone. No manual Python install. No mandatory `orgchat.toml`.
+
+If you already have the repo:
+
+```bash
+pip install -e .
+orgchat check
+```
+
 It runs seven important checks:
 
 1. Where is the data and how is it refreshed?

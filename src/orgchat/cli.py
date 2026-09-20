@@ -26,6 +26,7 @@ def _parser() -> argparse.ArgumentParser:
     check.add_argument("--output", help="Write the rendered report to this file")
     check.add_argument("--no-heuristics", action="store_true", help="Only use explicit orgchat.toml values")
     check.add_argument("--strict", action="store_true", help="Return exit code 1 for WARN as well as FAIL")
+    check.add_argument("--non-interactive", action="store_true", help="Never prompt for input")
 
     init = subparsers.add_parser("init", help="Create a starter orgchat.toml file.")
     init.add_argument("--path", default=".", help="Project root. Default: current directory")
@@ -67,25 +68,28 @@ def main(argv: list[str] | None = None) -> int:
     config_path = Path(args.config).expanduser().resolve() if args.config else root / "orgchat.toml"
     config_data, _, loaded = load_config(root, config_path if config_path.exists() else None)
 
+    interactive = not args.non_interactive and sys.stdin.isatty()
     if not loaded and not args.no_heuristics:
         print("Scanning project...")
         discovered = discover_project(root)
         for k, v in discovered.items():
             print(f"  ✓ {k} detected")
-        # Interactive quick questions for unknown info
-        try:
-            if input("\nI couldn't determine data refresh method. Automatic refresh? [y/N/skip] ").strip().lower() in ("y", "yes"):
-                config_data.setdefault("data_sources", {})["freshness_slo_minutes"] = 1440
-            else:
-                config_data.setdefault("data_sources", {})["freshness_slo_minutes"] = None
-        except EOFError:
-            pass
+        if interactive:
+            try:
+                ans = input("\nCould not determine data refresh policy. Automatic refresh? [y/N/skip] ").strip().lower()
+                if ans in ("y", "yes"):
+                    config_data.setdefault("data_sources", {})["freshness_slo_minutes"] = 1440
+                elif ans in ("n", "no"):
+                    config_data.setdefault("data_sources", {})["freshness_slo_minutes"] = None
+            except EOFError:
+                pass
 
     try:
         report = build_report(
             root=args.path,
             config_path=args.config,
             use_heuristics=not args.no_heuristics,
+            context_config=config_data or None,
         )
         content = render(report, args.format)
         if args.output:

@@ -280,13 +280,19 @@ def _evaluate_check(root: Path, config: dict[str, Any], paths: list[str], defini
     )
 
 
-def build_report(root: str | Path, config_path: str | Path | None = None, use_heuristics: bool = True) -> Report:
+def build_report(root: str | Path, config_path: str | Path | None = None, use_heuristics: bool = True, context_config: dict | None = None) -> Report:
     project_root = Path(root).expanduser().resolve()
     if not project_root.exists() or not project_root.is_dir():
         raise ValueError(f"Project path is not a directory: {project_root}")
 
     requested_config = Path(config_path).expanduser() if config_path else None
     config, loaded_path, loaded = load_config(project_root, requested_config)
+    if context_config:
+        for k, v in context_config.items():
+            if isinstance(v, dict) and k in config and isinstance(config[k], dict):
+                config[k].update(v)
+            else:
+                config[k] = v
     paths = discover_paths(project_root) if use_heuristics else []
     checks = [_evaluate_check(project_root, config, paths, definition, use_heuristics) for definition in CHECK_DEFINITIONS]
 
