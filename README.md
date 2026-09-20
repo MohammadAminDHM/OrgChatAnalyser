@@ -1,26 +1,26 @@
 # OrgChat Check
 
-یک CLI سبک برای اینکه قبل از ساخت یا تحویل چت‌بات سازمانی بفهمیم پروژه در چه وضعیتی است.
+A lightweight CLI to check production-readiness of an organization chatbot project before delivery.
 
-دستور اصلی:
+Main command:
 
 ```bash
 orgchat check
 ```
 
-این دستور هفت سؤال مهم را بررسی می‌کند:
+It runs seven important checks:
 
-1. داده‌ها کجا هستند و چطور به‌روز می‌شوند؟
-2. هر کاربر به چه اطلاعاتی دسترسی دارد؟
-3. پاسخ درست را چطور اندازه می‌گیریم؟
-4. اگر مدل جواب را نداند چه می‌کند؟
-5. هزینه و latency را چطور می‌بینیم؟
-6. وقتی سیستم خراب شد چه کسی آن را برمی‌گرداند؟
-7. بعد از تحویل چه کسی سیستم را نگهداری می‌کند؟
+1. Where is the data and how is it refreshed?
+2. Who has access to what information?
+3. How do we measure correct answers?
+4. What happens if the model doesn't know the answer?
+5. How do we observe cost and latency?
+6. Who restores the system when it breaks?
+7. Who maintains the system after delivery?
 
-## نصب محلی
+## Local install
 
-Python 3.11 یا بالاتر لازم است.
+Requires Python 3.11+.
 
 ```bash
 python -m venv .venv
@@ -29,52 +29,63 @@ source .venv/bin/activate       # Linux/macOS
 pip install -e .
 ```
 
-## شروع سریع
+## Run without cloning (PyPI / uvx)
 
-در ریشهٔ پروژه‌ای که می‌خواهی بررسی کنی:
+No local install or clone needed:
+
+```bash
+uvx orgchat check --config ./orgchat.toml
+# or global install
+pip install orgchat
+orgchat check
+```
+
+## Quick start
+
+In the root of the project you want to check:
 
 ```bash
 orgchat init
 ```
 
-مقادیر `orgchat.toml` را پر کن و بعد:
+Fill in `orgchat.toml` values, then:
 
 ```bash
 orgchat check
 ```
 
-برای خروجی فایل:
+For file output:
 
 ```bash
 orgchat check --format markdown --output orgchat-report.md
 orgchat check --format json --output orgchat-report.json
 ```
 
-برای بررسی یک مسیر دیگر:
+To check a different path:
 
 ```bash
 orgchat check --path ./my-chatbot
 ```
 
-برای CI:
+For CI:
 
 ```bash
 orgchat check --strict
 ```
 
-کد خروجی:
+Exit codes:
 
-- `0`: همهٔ کنترل‌ها عبور کرده‌اند یا فقط هشدار غیرstrict وجود دارد.
-- `1`: حداقل یک کنترل fail شده، یا در حالت `--strict` هشدار وجود دارد.
-- `2`: خطای ورودی، مسیر یا تنظیمات.
+- `0`: All checks pass or only non-strict warnings exist.
+- `1`: At least one check failed, or warnings exist in `--strict` mode.
+- `2`: Input, path, or settings error.
 
-## منطق گزارش
+## Report logic
 
-`orgchat.toml` منبع اصلی ارزیابی است. مقدارهای صریح `false` یا مسیرهای اشتباه باعث `FAIL` می‌شوند. مقدارهای ثبت‌نشده `WARN` می‌گیرند. CLI در کنار تنظیمات، نام فایل‌ها و پوشه‌های رایج مثل `evals`، `retrieval`، `monitoring` و `runbook` را هم به‌عنوان شواهد کمکی پیدا می‌کند.
+`orgchat.toml` is the main evaluation source. Explicit `false` values or wrong paths cause `FAIL`. Unset values get `WARN`. The CLI also looks for common files/folders (`evals`, `retrieval`, `monitoring`, `runbook`) as supporting evidence.
 
-شواهد کشف‌شده به‌تنهایی جایگزین تنظیم صریح کنترل‌ها نیستند؛ هدفشان این است که گزارش اولیه از پروژهٔ موجود مفید باشد و مسیر تکمیل را نشان بدهد.
+Discovered evidence alone does not replace explicit configuration; its purpose is to provide a useful initial report from the existing project and show the path to completion.
 
-## نمونه خروجی
+## Example output
 
 ```text
 ORGCHAT CHECK
@@ -82,24 +93,24 @@ Project: Enterprise Support Chatbot
 Overall: WARN | Score: 64.5/100
 
 Checks:
-  [PASS] 100.0/100  داده و به‌روزبودن
-  [WARN]  55.0/100  ارزیابی کیفیت
-  [FAIL]  40.0/100  دسترسی و امنیت
+  [PASS] 100.0/100  Data and freshness
+  [WARN]  55.0/100  Quality evaluation
+  [FAIL]  40.0/100  Access and security
 
 Next actions:
-  1. دسترسی و امنیت: بازیابی را با مجوزهای همان کاربر فیلتر کن.
+  1. Access and security: filter retrieval with the same user's permissions.
 ```
 
-## ساختار پروژه
+## Project structure
 
 ```text
 src/orgchat/
-  checker.py    # منطق هفت کنترل
-  config.py     # خواندن TOML و مسیرها
-  report.py     # خروجی terminal/json/markdown
-  cli.py        # دستورات orgchat check و orgchat init
+  checker.py    # seven-check logic
+  config.py     # TOML and path reading
+  report.py     # terminal/json/markdown output
+  cli.py        # orgchat check and orgchat init commands
 tests/
 examples/
 ```
 
-این نسخه وضعیت آمادگی عملیاتی را گزارش می‌کند و جایگزین تست امنیتی، ارزیابی مدل یا ممیزی سازمانی کامل نیست.
+This release reports operational readiness status; it is not a replacement for security testing, model evaluation, or full organizational audit.
