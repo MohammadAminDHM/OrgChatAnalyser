@@ -46,7 +46,7 @@ def test_cached_runtime_reuse():
     # Version-aware cache path uses ORGCHAT_VERSION from package.json
     import json, os
     pkg = json.load(open(os.path.join(os.path.dirname(__file__), '..', 'npm-wrapper', 'package.json')))
-    assert pkg['version'] == '0.1.2'
+    assert pkg['version'] == '0.1.3'
 
 def test_cli_interactive_answer_reaches_report():
     import tempfile, pathlib, sys
