@@ -37,16 +37,20 @@ def test_no_config_discovery():
         assert "README.md" in ev
 
 def test_non_interactive_never_calls_input():
-    import tempfile, pathlib, sys
+    import tempfile, pathlib, sys, json
     from unittest.mock import patch
     from orgchat.cli import main
     def fail_input(*a, **k):
         raise AssertionError("input() must not be called in non-interactive mode")
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
+        out_path = root / "non_interactive.json"
         with patch('builtins.input', fail_input):
             with patch('sys.stdin.isatty', return_value=False):
-                code = main(["check", "--path", str(root), "--non-interactive", "--format", "json"])
+                code = main(["check", "--path", str(root), "--non-interactive", "--format", "json", "--output", str(out_path)])
+        assert out_path.exists()
+        data = json.loads(out_path.read_text(encoding="utf-8"))
+        assert isinstance(data, dict)
         assert code in (0, 1)
 
 def test_node_launcher_version_sync():
@@ -70,33 +74,22 @@ def test_non_tty_never_calls_input():
         assert code in (0, 1)
 
 def test_cli_interactive_answer_reaches_report():
-    import tempfile, pathlib, sys
+    import tempfile, pathlib, sys, json
     from unittest.mock import patch
     from orgchat.cli import main
-    from orgchat.checker import build_report
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
-        # Before: no config -> data_sources freshness WARN
-        before = build_report(root)
-        # Simulate interactive CLI with stdin TTY and answer y
-        with patch('builtins.input', return_value='y'):
+        with patch('builtins.input', return_value='y') as mocked_input:
             with patch('sys.stdin.isatty', return_value=True):
                 code = main(["check", "--path", str(root), "--format", "json", "--output", str(root / "after.json")])
-        # Verify report was produced and interactive answer affected config
-        after = build_report(root, context_config={"data_sources": {"freshness_slo_minutes": 1440}})
-        # Verify finding changed
-        before_fresh = None
-        after_fresh = None
-        for c in before.checks:
-            if c.key == "data_sources":
-                for f in c.findings:
-                    if f.key == "freshness_slo_minutes":
-                        before_fresh = f.status
-        for c in after.checks:
-            if c.key == "data_sources":
-                for f in c.findings:
-                    if f.key == "freshness_slo_minutes":
-                        after_fresh = f.status
-        assert before_fresh == "WARN"
-        assert after_fresh == "PASS"
-        assert after.score > before.score
+        mocked_input.assert_called_once()
+        assert code in (0, 1)
+        report_path = root / "after.json"
+        assert report_path.exists()
+        data = json.loads(report_path.read_text(encoding="utf-8"))
+        for check in data.get("checks", []):
+            if check.get("key") == "data_sources":
+                for finding in check.get("findings", []):
+                    if finding.get("key") == "freshness_slo_minutes":
+                        assert finding.get("status") == "PASS", f"Expected PASS, got {finding.get('status')}"
+                        break
