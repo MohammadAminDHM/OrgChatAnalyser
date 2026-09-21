@@ -65,9 +65,9 @@ pip install orgchat
 orgchat check
 ```
 
-## Quick start
+## Advanced Configuration
 
-In the root of the project you want to check:
+For explicit readiness settings (optional):
 
 ```bash
 orgchat init

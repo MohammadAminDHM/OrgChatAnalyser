@@ -3,4 +3,4 @@ try:
     from importlib.metadata import version, PackageNotFoundError
     __version__ = version("orgchat")
 except PackageNotFoundError:
-    __version__ = "0.1.3"
+    __version__ = "0.1.4"

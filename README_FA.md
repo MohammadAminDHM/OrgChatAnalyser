@@ -57,9 +57,9 @@ pip install orgchat
 orgchat check
 ```
 
-## شروع سریع
+## تنظیمات پیشرفته (Advanced Configuration)
 
-در ریشهٔ پروژه‌ای که می‌خواهی بررسی کنی:
+تنظیمات صریح (اختیاری):
 
 ```bash
 orgchat init

@@ -36,26 +36,67 @@ def test_no_config_discovery():
         ev = discover_project(root)
         assert "README.md" in ev
 
-def test_non_interactive_flag():
-    import argparse
-    from orgchat.cli import _parser
-    args = _parser().parse_args(["check", "--non-interactive"])
-    assert args.non_interactive is True
+def test_non_interactive_never_calls_input():
+    import tempfile, pathlib, sys
+    from unittest.mock import patch
+    from orgchat.cli import main
+    def fail_input(*a, **k):
+        raise AssertionError("input() must not be called in non-interactive mode")
+    with tempfile.TemporaryDirectory() as td:
+        root = pathlib.Path(td)
+        with patch('builtins.input', fail_input):
+            with patch('sys.stdin.isatty', return_value=False):
+                code = main(["check", "--path", str(root), "--non-interactive", "--format", "json"])
+        assert code in (0, 1)
 
-def test_cached_runtime_reuse():
-    # Version-aware cache path uses ORGCHAT_VERSION from package.json
+def test_node_launcher_version_sync():
     import json, os
     pkg = json.load(open(os.path.join(os.path.dirname(__file__), '..', 'npm-wrapper', 'package.json')))
-    assert pkg['version'] == '0.1.3'
+    import orgchat
+    import importlib.metadata
+    assert pkg['version'] == importlib.metadata.version('orgchat') == orgchat.__version__
+
+def test_non_tty_never_calls_input():
+    import tempfile, pathlib, sys
+    from unittest.mock import patch
+    from orgchat.cli import main
+    def fail_input(*a, **k):
+        raise AssertionError("input() must not be called when stdin is not TTY")
+    with tempfile.TemporaryDirectory() as td:
+        root = pathlib.Path(td)
+        with patch('builtins.input', fail_input):
+            with patch('sys.stdin.isatty', return_value=False):
+                code = main(["check", "--path", str(root), "--format", "json"])
+        assert code in (0, 1)
 
 def test_cli_interactive_answer_reaches_report():
     import tempfile, pathlib, sys
     from unittest.mock import patch
     from orgchat.cli import main
+    from orgchat.checker import build_report
     with tempfile.TemporaryDirectory() as td:
         root = pathlib.Path(td)
-        with patch('sys.stdin', open('/dev/null' if sys.platform != 'win32' else 'NUL', 'r')):
-            pass  # non-interactive path check
-        # Non-interactive must not prompt
-        code = main(["check", "--path", str(root), "--non-interactive", "--format", "json", "--output", str(root / "out.json")])
-        assert code == 0 or code == 1  # may be WARN/FAIL
+        # Before: no config -> data_sources freshness WARN
+        before = build_report(root)
+        # Simulate interactive CLI with stdin TTY and answer y
+        with patch('builtins.input', return_value='y'):
+            with patch('sys.stdin.isatty', return_value=True):
+                code = main(["check", "--path", str(root), "--format", "json", "--output", str(root / "after.json")])
+        # Verify report was produced and interactive answer affected config
+        after = build_report(root, context_config={"data_sources": {"freshness_slo_minutes": 1440}})
+        # Verify finding changed
+        before_fresh = None
+        after_fresh = None
+        for c in before.checks:
+            if c.key == "data_sources":
+                for f in c.findings:
+                    if f.key == "freshness_slo_minutes":
+                        before_fresh = f.status
+        for c in after.checks:
+            if c.key == "data_sources":
+                for f in c.findings:
+                    if f.key == "freshness_slo_minutes":
+                        after_fresh = f.status
+        assert before_fresh == "WARN"
+        assert after_fresh == "PASS"
+        assert after.score > before.score

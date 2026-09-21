@@ -1,6 +1,6 @@
 {
   "name": "orgchat",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Production-readiness checks for organization chatbot projects (isolated Python runtime via npx)",
   "main": "index.js",
   "bin": "bin/orgchat.js",

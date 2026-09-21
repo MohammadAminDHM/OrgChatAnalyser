@@ -1,0 +1,10 @@
+const fs = require('fs');
+const assert = require('assert');
+const pkg = require('../package.json');
+const launcherPath = require('path').join(__dirname, 'bin', 'orgchat.js');
+const launcher = fs.readFileSync(launcherPath, 'utf8');
+assert.strictEqual(pkg.version, '0.1.3', 'npm version must be 0.1.3');
+assert(launcher.includes('ORCHAT_VERSION'), 'launcher should use version constant');
+assert(launcher.includes('process.env.HOME'), 'launcher uses user-level cache');
+assert(launcher.includes("execFileSync"), 'launcher uses execFileSync not shell strings');
+console.log('Node launcher tests passed');
